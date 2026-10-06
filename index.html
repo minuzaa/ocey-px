@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#090909">
+  <meta name="description" content="ocey P. x — luxury shared photo & video gallery">
+  <title>ocey P. x — Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="noise"></div>
+  <header class="topbar">
+    <a class="brand" href="#">
+      <span class="brand-mark">o</span>
+      <span><b>ocey</b> P. x</span>
+    </a>
+    <nav>
+      <button class="nav-btn active" data-view="gallery">Gallery</button>
+      <button class="nav-btn" data-view="videos">Videos</button>
+      <button class="nav-btn" data-view="favorites">Favorites</button>
+    </nav>
+    <div class="top-actions">
+      <span id="syncDot" class="sync-dot offline"></span>
+      <span id="syncText">Offline</span>
+      <button id="loginBtn" class="ghost-btn">Sign in</button>
+      <button id="uploadBtn" class="primary-btn">＋ Add</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">SHARED VISUAL ARCHIVE</p>
+        <h1>Every frame,<br><em>kept together.</em></h1>
+        <p class="hero-copy">A private-feeling luxury gallery for 150+ portrait frames, moving images, and memories shared across devices.</p>
+      </div>
+      <div class="hero-stat">
+        <span id="mediaCount">0</span>
+        <small>MEDIA</small>
+      </div>
+    </section>
+
+    <section class="toolbar">
+      <div class="search-wrap">
+        <span>⌕</span><input id="searchInput" placeholder="Search title, tag, description…">
+      </div>
+      <select id="sortSelect">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="name">Name A–Z</option>
+        <option value="size">Largest first</option>
+      </select>
+      <button id="viewToggle" class="icon-btn" title="Toggle layout">▦</button>
+      <button id="refreshBtn" class="icon-btn" title="Refresh">↻</button>
+    </section>
+
+    <section class="filters">
+      <button class="filter active" data-filter="all">All <span id="allCount">0</span></button>
+      <button class="filter" data-filter="image">Photos <span id="photoCount">0</span></button>
+      <button class="filter" data-filter="video">Videos <span id="videoCount">0</span></button>
+      <button class="filter" data-filter="favorite">Favorites <span id="favCount">0</span></button>
+    </section>
+
+    <section id="gallery" class="gallery-grid"></section>
+
+    <section id="empty" class="empty-state hidden">
+      <div class="empty-icon">◌</div>
+      <h2>Your archive starts here.</h2>
+      <p>Add photos or videos. Once uploaded to the shared cloud library, they'll appear on every device using the same account.</p>
+      <button class="primary-btn" id="emptyUpload">Add first media</button>
+    </section>
+
+    <section class="capacity">
+      <div>
+        <span class="eyebrow">ARCHIVE CAPACITY</span>
+        <h3><span id="slotUsed">0</span> / 150 photo slots</h3>
+      </div>
+      <div class="capacity-bar"><span id="capacityFill"></span></div>
+      <p>Slots are a visual target, not a hard cloud limit.</p>
+    </section>
+
+    <section class="feature-panel">
+      <div>
+        <p class="eyebrow">OCEY P. X SYSTEM</p>
+        <h2>202 capabilities,<br><em>one archive.</em></h2>
+      </div>
+      <div id="featureList" class="feature-list"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <dialog id="authDialog">
+    <form method="dialog" id="authForm" class="dialog-card">
+      <button class="close" value="cancel">×</button>
+      <p class="eyebrow">SHARED ACCESS</p>
+      <h2>Sign in to edit.</h2>
+      <p class="muted">Viewing can stay open. Sign in to add, edit, or delete shared media.</p>
+      <input id="email" type="email" placeholder="Email" autocomplete="email" required>
+      <input id="password" type="password" placeholder="Password" autocomplete="current-password" required>
+      <div class="dialog-actions">
+        <button type="button" id="signIn" class="primary-btn">Sign in</button>
+        <button type="button" id="signUp" class="ghost-btn">Create account</button>
+      </div>
+      <p id="authMessage" class="form-message"></p>
+    </form>
+  </dialog>
+
+  <dialog id="uploadDialog">
+    <form method="dialog" id="uploadForm" class="dialog-card wide">
+      <button class="close" value="cancel">×</button>
+      <p class="eyebrow">NEW MEMORY</p>
+      <h2>Add media.</h2>
+      <label class="dropzone" id="dropzone">
+        <input id="fileInput" type="file" accept="image/*,video/*" multiple hidden>
+        <span class="drop-icon">＋</span>
+        <strong>Drop files here or tap to browse</strong>
+        <small>Images + video · multiple selection supported</small>
+      </label>
+      <div id="uploadQueue" class="upload-queue"></div>
+      <div class="meta-fields">
+        <input id="titleInput" placeholder="Title (optional)">
+        <input id="tagsInput" placeholder="Tags, comma separated">
+        <textarea id="descriptionInput" placeholder="Description (optional)"></textarea>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="ghost-btn" id="clearQueue">Clear</button>
+        <button type="button" class="primary-btn" id="startUpload">Upload to shared archive</button>
+      </div>
+      <p id="uploadMessage" class="form-message"></p>
+    </form>
+  </dialog>
+
+  <dialog id="editDialog">
+    <form method="dialog" class="dialog-card">
+      <button class="close" value="cancel">×</button>
+      <p class="eyebrow">EDIT MEMORY</p>
+      <h2>Edit details.</h2>
+      <input id="editTitle" placeholder="Title">
+      <input id="editTags" placeholder="Tags">
+      <textarea id="editDescription" placeholder="Description"></textarea>
+      <label class="check"><input id="editFavorite" type="checkbox"> Favorite</label>
+      <div class="dialog-actions">
+        <button class="ghost-btn" value="cancel">Cancel</button>
+        <button type="button" class="primary-btn" id="saveEdit">Save changes</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="viewerDialog">
+    <div class="viewer">
+      <button class="viewer-close" id="viewerClose">×</button>
+      <button class="viewer-nav prev" id="viewerPrev">‹</button>
+      <div id="viewerContent"></div>
+      <button class="viewer-nav next" id="viewerNext">›</button>
+      <div id="viewerCaption" class="viewer-caption"></div>
+    </div>
+  </dialog>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
